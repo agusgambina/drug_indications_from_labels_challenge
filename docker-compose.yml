@@ -1,0 +1,39 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - ${OLLAMA_PORT}:11434
+    volumes:
+      - ./ollama_data:/root/.ollama
+    restart: unless-stopped
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    ports:
+      - ${POSTGRES_PORT}:5432
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+  app:
+    build: .
+    container_name: app
+    ports:
+      - "${APP_PORT}:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - db
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+    name: ollama_data
+  postgres_data:
+    name: postgres_data
