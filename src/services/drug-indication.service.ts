@@ -83,20 +83,61 @@ export class DrugIndicationService {
       const jsonData = await fs.promises.readFile(jsonPath, 'utf-8');
       const programData = JSON.parse(jsonData) as DrugProgramData;
 
-      // Extract requirements from eligibility details
-      const requirements: Requirement[] = [];
-      const eligibilityLines = programData.EligibilityDetails.split('\n');
-      for (const line of eligibilityLines) {
-        if (line.startsWith('-')) {
-          const requirement = line.substring(1).trim();
-          if (requirement.toLowerCase().includes('us resident')) {
-            requirements.push({ name: 'us_residency', value: 'true' });
+      // Use Ollama to parse and structure eligibility details
+      let requirements: Requirement[] = [];
+      try {
+        const prompt = `Parse the following eligibility details into structured key-value pairs. 
+        Focus on extracting specific requirements like age limits, residency requirements, insurance requirements, 
+        and any other specific conditions. Format the response as JSON with "name" and "value" pairs.
+        
+        Eligibility Details:
+        ${programData.EligibilityDetails}
+        
+        Return only the JSON array of requirements, nothing else.`;
+
+        const ollamaResponse = await this.ollamaService.generate(
+          'llama2',
+          prompt,
+        );
+
+        if (ollamaResponse?.response) {
+          try {
+            // Extract JSON from the response
+            const jsonMatch = ollamaResponse.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              const parsedRequirements = JSON.parse(
+                jsonMatch[0],
+              ) as Requirement[];
+              if (Array.isArray(parsedRequirements)) {
+                requirements = parsedRequirements;
+              }
+            }
+          } catch (parseError) {
+            console.warn(
+              'Failed to parse Ollama response as JSON:',
+              parseError,
+            );
           }
-          if (requirement.toLowerCase().includes('commercial insurance')) {
-            requirements.push({ name: 'insurance_coverage', value: 'true' });
-          }
-          if (requirement.toLowerCase().includes('fda-approved')) {
-            requirements.push({ name: 'fda_approved', value: 'true' });
+        }
+      } catch (error) {
+        console.warn(
+          'Failed to generate structured requirements from Ollama:',
+          error,
+        );
+        // Fallback to basic parsing if AI parsing fails
+        const eligibilityLines = programData.EligibilityDetails.split('\n');
+        for (const line of eligibilityLines) {
+          if (line.startsWith('-')) {
+            const requirement = line.substring(1).trim();
+            if (requirement.toLowerCase().includes('us resident')) {
+              requirements.push({ name: 'us_residency', value: 'true' });
+            }
+            if (requirement.toLowerCase().includes('commercial insurance')) {
+              requirements.push({ name: 'insurance_coverage', value: 'true' });
+            }
+            if (requirement.toLowerCase().includes('fda-approved')) {
+              requirements.push({ name: 'fda_approved', value: 'true' });
+            }
           }
         }
       }

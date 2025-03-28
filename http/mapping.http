@@ -1,0 +1,4 @@
+# Get mapping for a specific setid
+GET http://localhost:3000/mapping?setid={{setid}}
+
+###
