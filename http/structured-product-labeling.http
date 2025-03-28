@@ -1,0 +1,6 @@
+# Get structured product labeling by setId
+GET http://localhost:3000/structured-product-labeling?setid={{setid}}
+
+###
+
+

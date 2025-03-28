@@ -21,7 +21,8 @@ export class StructuredProductLabelingController {
     }
 
     try {
-      const result = await this.structuredProductLabelingService.findBySetId(setId);
+      const result =
+        await this.structuredProductLabelingService.findBySetId(setId);
 
       if (!result || !result.data) {
         throw new NotFoundException(
