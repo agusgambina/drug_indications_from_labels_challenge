@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { DrugIndicationService } from '../services/drug-indication.service';
 
 interface DrugIndication {
@@ -18,13 +18,28 @@ export class DrugIndicationController {
   constructor(private readonly drugIndicationService: DrugIndicationService) {}
 
   @Get()
-  async getDrugIndications(): Promise<ApiResponse<DrugIndication[]>> {
+  async getDrugIndications(
+    @Query('drugName') drugName?: string,
+  ): Promise<ApiResponse<DrugIndication | DrugIndication[]>> {
     try {
-      const drugIndications =
-        await this.drugIndicationService.parseAndInferDrugIndications();
+      if (drugName) {
+        const drugIndication =
+          await this.drugIndicationService.getDrugIndicationsByName(drugName);
+        if (!drugIndication) {
+          return {
+            success: false,
+            error: `Drug "${drugName}" not found`,
+          };
+        }
+        return {
+          success: true,
+          data: drugIndication,
+        };
+      }
+
       return {
-        success: true,
-        data: drugIndications,
+        success: false,
+        error: 'Drug name is required to parse and infer drug indications',
       };
     } catch (error) {
       return {

@@ -1,5 +1,5 @@
 # Get drug indications
-GET http://localhost:3000/drug-indications
+GET http://localhost:3000/drug-indications?drugName=dupixent
 
 ###
 

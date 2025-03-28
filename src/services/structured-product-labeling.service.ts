@@ -15,4 +15,8 @@ export class StructuredProductLabelingService {
       await this.dailyMedService.getProductLabelingBySetId(setId);
     return { data: productInfo };
   }
+
+  async getSetIdByDrugName(drugName: string): Promise<string> {
+    return await this.dailyMedService.getSetIdByDrugName(drugName);
+  }
 }

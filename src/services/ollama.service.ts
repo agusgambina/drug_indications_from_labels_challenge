@@ -14,6 +14,12 @@ interface OllamaResponse {
   done: boolean;
 }
 
+interface OllamaStreamResponse {
+  model: string;
+  response: string;
+  done: boolean;
+}
+
 @Injectable()
 export class OllamaService {
   private readonly baseUrl = 'http://localhost:11434';
@@ -33,7 +39,7 @@ export class OllamaService {
     options: Record<string, unknown> = {},
   ): Promise<OllamaResponse> {
     try {
-      const response = await axios.post<OllamaResponse>(
+      const response = await axios.post<OllamaStreamResponse | OllamaStreamResponse[]>(
         `${this.baseUrl}/api/generate`,
         {
           model,
@@ -41,6 +47,20 @@ export class OllamaService {
           ...options,
         },
       );
+      
+      // Handle streaming response
+      if (Array.isArray(response.data)) {
+        // Combine all response chunks into a single response
+        const combinedResponse = response.data.reduce<OllamaResponse>((acc, chunk) => {
+          if (chunk.response) {
+            acc.response = (acc.response || '') + chunk.response;
+          }
+          return acc;
+        }, { model, response: '', done: true });
+        
+        return combinedResponse;
+      }
+      
       return response.data;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

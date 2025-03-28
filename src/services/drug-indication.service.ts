@@ -9,7 +9,7 @@ interface DrugIndication {
   inferredIndications?: string[];
 }
 
-interface DupixentJsonData {
+interface DrugJsonData {
   Drugs: string[];
   TherapeuticAreas: string[];
 }
@@ -20,15 +20,22 @@ export class DrugIndicationService {
 
   /**
    * Parse the drug indication JSON file and infer missing information using Ollama
+   * @param drugName The name of the drug to process
    * @returns Promise containing the parsed and inferred drug indications
    */
-  async parseAndInferDrugIndications(): Promise<DrugIndication[]> {
+  async parseAndInferDrugIndications(
+    drugName: string,
+  ): Promise<DrugIndication[]> {
     try {
       // Read and parse the JSON file
-      const jsonPath = path.join(process.cwd(), 'challenge', 'dupixent.json');
+      const jsonPath = path.join(
+        process.cwd(),
+        'challenge',
+        `${drugName.toLowerCase()}.json`,
+      );
       const jsonData = JSON.parse(
         fs.readFileSync(jsonPath, 'utf-8'),
-      ) as DupixentJsonData;
+      ) as DrugJsonData;
 
       // Extract drugs and therapeutic areas
       const drugs = jsonData.Drugs || [];
@@ -51,27 +58,47 @@ export class DrugIndicationService {
             'llama2',
             prompt,
           );
-          if (ollamaResponse && ollamaResponse.response) {
-            const inferredIndications = ollamaResponse.response
+
+          if (ollamaResponse?.response) {
+            drugIndication.inferredIndications = ollamaResponse.response
               .split(',')
               .map((indication: string) => indication.trim())
-              .filter((indication: string) => indication.length > 0);
-
-            drugIndication.inferredIndications = inferredIndications;
+              .filter(Boolean);
+          } else {
+            console.warn(
+              `No response received from Ollama for ${drugIndication.drug}`,
+            );
+            drugIndication.inferredIndications = therapeuticAreas;
           }
         } catch (error) {
           console.error(
-            `Failed to infer indications for ${drugIndication.drug}:`,
+            `Error inferring indications for ${drugIndication.drug}:`,
             error,
           );
+          drugIndication.inferredIndications = [];
         }
       }
 
       return drugIndications;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to parse drug indications: ${errorMessage}`);
+      console.error('Error parsing drug indications:', error);
+      throw error;
     }
+  }
+
+  /**
+   * Get drug indications for a specific drug
+   * @param drugName The name of the drug to get indications for
+   * @returns Promise containing the drug indication for the specified drug
+   */
+  async getDrugIndicationsByName(
+    drugName: string,
+  ): Promise<DrugIndication | null> {
+    const allIndications = await this.parseAndInferDrugIndications(drugName);
+    return (
+      allIndications.find(
+        (drug) => drug.drug.toLowerCase() === drugName.toLowerCase(),
+      ) || null
+    );
   }
 }
