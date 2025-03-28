@@ -80,13 +80,18 @@ export class MappingService {
       }
     }
 
-    return {
+    const mappingResponse: MappingResponse = {
       setid,
       drugName,
       indications: filteredIndications,
       lastUpdateDate: splData.data.lastUpdateDate,
       ...(eligibilityRequirements && { eligibilityRequirements }),
     };
+
+    // Save the mapping to the database
+    await this.splService.saveMapping(mappingResponse);
+
+    return mappingResponse;
   }
 
   private extractIndividualIndications(indicationsText: string): string[] {

@@ -192,10 +192,24 @@ export class DailyMedService {
         return `${year}${month}${day}`;
       });
 
+      // If no date was found, return today's date in YYYYMMDD format
+      if (!lastUpdateDate) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}${month}${day}`;
+      }
+
       return lastUpdateDate;
     } catch (error) {
       console.error('Error extracting last update date:', error);
-      return '';
+      // Return today's date in YYYYMMDD format on error
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
     }
   }
 }
