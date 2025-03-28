@@ -1,17 +1,21 @@
 import {
   Controller,
   Get,
+  Post,
   Query,
+  Body,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { StructuredProductLabelingService } from '../services/structured-product-labeling.service';
 import { SPLResponse } from '../services/structured-product-labeling.service';
+import { OllamaService } from '../services/ollama.service';
 
 @Controller('structured-product-labeling')
 export class StructuredProductLabelingController {
   constructor(
     private readonly structuredProductLabelingService: StructuredProductLabelingService,
+    private readonly ollamaService: OllamaService,
   ) {}
 
   @Get()
@@ -36,6 +40,32 @@ export class StructuredProductLabelingController {
         throw error;
       }
       throw new BadRequestException('Error processing request');
+    }
+  }
+
+  @Post('generate')
+  async generateResponse(
+    @Body() body: { model: string; prompt: string },
+  ): Promise<{ response: string }> {
+    if (!body.model || !body.prompt) {
+      throw new BadRequestException('Model and prompt are required');
+    }
+
+    try {
+      // Check if the model is available
+      const isAvailable = await this.ollamaService.isModelAvailable(body.model);
+      if (!isAvailable) {
+        // Pull the model if it's not available
+        await this.ollamaService.pullModel(body.model);
+      }
+
+      // Generate the response
+      const result = await this.ollamaService.generate(body.model, body.prompt);
+      return { response: result.response };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Error generating response',
+      );
     }
   }
 }

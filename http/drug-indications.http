@@ -1,0 +1,6 @@
+# Get drug indications
+GET http://localhost:3000/drug-indications
+
+###
+
+
