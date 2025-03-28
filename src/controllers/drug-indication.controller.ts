@@ -1,11 +1,8 @@
-import { Controller, Get } from '@nestjs/common';
-import { DrugIndicationService } from '../services/drug-indication.service';
-
-interface DrugIndication {
-  drug: string;
-  indications: string[];
-  inferredIndications?: string[];
-}
+import { Controller, Get, Query } from '@nestjs/common';
+import {
+  DrugIndicationService,
+  ProgramOutput,
+} from '../services/drug-indication.service';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -18,10 +15,12 @@ export class DrugIndicationController {
   constructor(private readonly drugIndicationService: DrugIndicationService) {}
 
   @Get()
-  async getDrugIndications(): Promise<ApiResponse<DrugIndication[]>> {
+  async getDrugIndications(
+    @Query('drugName') drugName?: string,
+  ): Promise<ApiResponse<ProgramOutput>> {
     try {
       const drugIndications =
-        await this.drugIndicationService.parseAndInferDrugIndications();
+        await this.drugIndicationService.parseAndInferDrugIndications(drugName);
       return {
         success: true,
         data: drugIndications,

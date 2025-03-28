@@ -1,0 +1,51 @@
+{
+  "program_name": "Dupixent MyWay Copay Card",
+  "coverage_eligibilities": ["Commercially insured"],
+  "program_type": "Coupon",
+  "requirements": [
+    {
+      "name": "us_residency",
+      "value": "true"
+    },
+    {
+      "name": "minimum_age",
+      "value": "18"
+    },
+    {
+      "name": "insurance_coverage",
+      "value": "true"
+    },
+    {
+      "name": "eligibility_length",
+      "value": "12m"
+    }
+  ],
+  "benefits": [
+    {
+      "name": "max_annual_savings",
+      "value": "13000.00"
+    },
+    {
+      "name": "min_out_of_pocket",
+      "value": "0.00"
+    }
+  ],
+  "forms": [
+    {
+      "name": "Enrollment Form",
+      "link": "https://www.dupixent.com/support-savings/copay-card"
+    }
+  ],
+  "funding": {
+    "evergreen": "true",
+    "current_funding_level": "Data Not Available"
+  },
+  "details": [
+    {
+      "eligibility": "Patient must have commercial insurance and be a legal resident of the US",
+      "program": "Patients may pay as little as $0 for every month of Dupixent",
+      "renewal": "Automatically re-enrolled every January 1st if used within 18 months",
+      "income": "Not required"
+    }
+  ]
+}
